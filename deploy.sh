@@ -16,6 +16,21 @@ read -p "Server IP address: " ssh_ip
 read -p "SSH key path: " ssh_key
 read -p "App port (internal container port): " app_port
 
+if [[ "$1" == "--cleanup" ]]; then
+  echo "🧹 Running cleanup on remote server..."
+  ssh -i "$ssh_key" "$ssh_user@$ssh_ip" <<EOF
+    docker stop myapp_container || true
+    docker rm myapp_container || true
+    docker rmi myapp || true
+    sudo rm -f /etc/nginx/sites-available/default
+    sudo rm -f /etc/nginx/sites-enabled/default
+    sudo systemctl restart nginx
+EOF
+  echo "✅ Cleanup complete."
+  exit 0
+fi
+
+
 # Clone or update repo
 repo_name=$(basename "$repo_url" .git)
 if [ -d "$repo_name" ]; then
